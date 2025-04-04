@@ -1,50 +1,61 @@
 import dotenv from 'dotenv';
 import express from 'express';
+import bcrypt from 'bcrypt';
+import models from './models/index.js';
 
-dotenv.config();
+dotenv.config(); // loading environment variables from .env file
 const app = express();
 
-const courses = [
-    {id: 1, name: 'course1'},
-    {id: 2, name: 'course2'},
-    {id: 3, name: 'course3'},
-];
+app.use(express.json()); // this is a middleware to parse incoming JSON requests
 
 app.get('/', (req, res) => {
     res.send('Hello World!!');
 });
 
+// signup route POST
+app.post('/signup', async (req, res) => {
+    const { name, email, password, encryption_key
+    } = req.body;
 
-app.get('/api/courses', (req, res) => {
-    res.send(courses);
+    try {
+        const dbModels = await models; // loading sequelize models (ORM Objects) that let us interact with the database
+
+        const existingEmail = await dbModels.User.findOne({ // finding is email used by user signing up already exists
+            where: { email },
+            attributes: ['id'] // attributes control the columns you want to fetch from the database, only return the id field of the matching user. Prevents returning entire row
+        });
+
+        if(existingEmail) {
+            res.status(400);
+            return res.json({
+                message: "This email already exists",
+                sys_message: 'email_exists'
+            });
+        }
+
+        // takes the plain-text password, and turning it to a secure hashed version 
+        const hashedPassword = await bcrypt.hash(password, 10); // applying 10 rounds of salt
+        const hashedEncryptionKey = await bcrypt.hash(encryption_key, 10);
+
+        //creating a new user in the databse
+        const newUser = await dbModels.User.create({
+            name,
+            email,
+            password: hashedPassword,
+            encryption_key: hashedEncryptionKey
+        });
+        res.status(200).json({
+            message: "Signup was successful!",
+            userId: newUser.id
+        })
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: 'Something went wrong during signup',
+            error: error.message
+        });
+    }
 });
-
-
-// Ex. http://localhost:5000/api/courses/1
-// Express sees that this matches the pattern /api/courses/:id
-// grabs the part of the URl in place of :id
-// stores it in req.params.id - an object
-// { id: '1' } this is an object
-// res.send('1') = 1
-app.get('/api/courses/:id', (req, res) => {
-    let course = courses.find(c => c.id === parseInt(req.params.id));
-    if (!course) res.status(404).send('The course with the given ID was not found');
-    res.send(course);
-});
-
-// http://localhost:5000/api/posts/2018/1
-// we will see {"year":"2018","month":"1"}
-app.get('/api/posts/:year/:month', (req, res) => {
-    res.send(req.params);
-});
-
-// query string parameters = ?key=value part of URL 
-// http://localhost:5000/api/posts/2018/1?sortBy=name
-
-app.get('/api/posts/:year/:month', (req, res) => {
-    res.send(req.query)
-})
-
 
 //app.post('/', (req, res))
 //app.patch('/', ())
