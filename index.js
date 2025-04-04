@@ -1,7 +1,7 @@
-import dotenv from 'dotenv';
-import express from 'express';
-import bcrypt from 'bcrypt';
-import models from './models/index.js';
+const dotenv = require('dotenv');
+const express = require('express');
+const bcrypt = require('bcrypt');
+const models = require('./models');
 
 dotenv.config(); // loading environment variables from .env file
 const app = express();

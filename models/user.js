@@ -23,6 +23,8 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'User',
+    tableName: 'Users', // mapping to my table User
+    underscored: true   // for sequelize to know to use _
   });
   return User;
 };
