@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const {expressjwt } = require('express-jwt');
 
 dotenv.config(); // loading environment variables from .env file
-console.log('JWT_SECRET:', process.env.JWT_SECRET);
+//console.log('JWT_SECRET:', process.env.JWT_SECRET);
 const app = express();
 
 app.use(express.json()); // this is a middleware to parse incoming JSON requests
@@ -28,7 +28,7 @@ app.post('/signup', async (req, res) => {
     } = req.body;
 
     try {
-        const dbModels = await models; // loading sequelize models (ORM Objects) that let us interact with the database
+        const dbModels =  models; // loading sequelize models (ORM Objects) that let us interact with the database
 
         const existingEmail = await dbModels.User.findOne({ // finding is email used by user signing up already exists
             where: { email },
@@ -70,7 +70,7 @@ app.post('/signup', async (req, res) => {
 // LOGIN post route
 app.post('/login', async (req, res, next) => {
     const {email, password } = req.body; // pulling email and password from request body
-    const dbModels = await models.default; // loading sequelize models (ORM Objects) that let us interact with the database
+    const dbModels = require('./models'); // loading sequelize models (ORM Objects) that let us interact with the database
     try{
 
         const findUser = await dbModels.User.findOne({
