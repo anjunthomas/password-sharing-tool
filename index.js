@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 const models = require('./models');
 const jwt = require('jsonwebtoken');
 const {expressjwt } = require('express-jwt');
+const unless = require("express-unless");
+expressjwt.unless = unless;
 
 dotenv.config(); // loading environment variables from .env file
 //console.log('JWT_SECRET:', process.env.JWT_SECRET);
