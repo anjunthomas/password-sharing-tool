@@ -2,26 +2,22 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('user_passwords', {
+    await queryInterface.createTable('UserPasswords', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      owner_user_id: {
+      ownerUserId: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'users',
+          model: 'Users',
           key: 'id'
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
-      },
-      label: {
-        type: Sequelize.STRING,
-        allowNull: false
       },
       url: {
         type: Sequelize.STRING,
@@ -35,14 +31,19 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
-      shared_by_user_id: {
+      sharedByUserId: {
         type: Sequelize.INTEGER,
+        allowNull: true,
         references: {
-          model: 'users',
+          model: 'Users',
           key: 'id'
         },
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL'
+      },
+      label: {
+        type: Sequelize.STRING,
+        allowNull: true
       },
       weak_encryption: {
         type: Sequelize.BOOLEAN,
@@ -50,24 +51,25 @@ module.exports = {
       },
       source_password_id: {
         type: Sequelize.INTEGER,
+        allowNull: true,
         references: {
-          model: 'user_passwords',
+          model: 'UserPasswords',
           key: 'id'
         },
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL'
       },
-      created_at: {
+      createdAt: {
         allowNull: false,
         type: Sequelize.DATE
       },
-      updated_at: {
+      updatedAt: {
         allowNull: false,
         type: Sequelize.DATE
-      },
+      }
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('user_passwords');
+    await queryInterface.dropTable('UserPasswords');
   }
 };

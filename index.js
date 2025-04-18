@@ -86,20 +86,22 @@ app.post('/login', async (req, res, next) => {
         }
 
         // now comparing the hashed password in the DB with the user entered one
+        // fetch the saved password hash from the database, compare the hash of both strings
         const matched = await bcrypt.compare(password, findUser.password);
 
         if (matched) {
             const token = jwt.sign(
-            { user_id: findUser.id },
-            process.env.JWT_SECRET,
-            { algorithm: "HS256", expiresIn: "1h" }
+            { user_id: findUser.id }, // to make a unique token
+            process.env.JWT_SECRET, // JWT token makes the sign in secure
+            { algorithm: "HS256", expiresIn: "1h" } // which algorithm you want to use to make token and when it will expire
             );
         
-            return res.json({
+            return res.json({  // once token is generated, in the login api response, you can return the token
                 message: "Login successful",
                 sys_message: "login_success",
                 token,
-                name: findUser.name
+                name: findUser.name // return the name of the user, 
+                // returning name alone because in login you may want to say hello ___ [user's name]____
             });
         }
 
@@ -109,6 +111,70 @@ app.post('/login', async (req, res, next) => {
         console.error(error);
         res.status(500).json({message: 'An error occured.', error: error.message})
     }
+});
+
+app.post('/passwords/save', async (req, res, next) => {
+    const { url, username, password, encryption_key, label } = req.body;
+    const userId = req.auth.user_id;
+    const modelsObj = await models.default;
+    const userRecord = await modelsObj.User.findOne({
+        attributes: ['encryption_key'], where: { id: userId }
+    });
+    if (!userRecord) {
+        res.status(403);
+        return res.json({message: 'Unable to find the account'});
+    }
+    const matched = await bcrypt.compare(encryption_key, userRecord.encryption_key);
+    if (!matched) {
+        res.status(400);
+        return res.json({message: 'Incorrect encryption key'});
+    }
+    if (!(username && password && url)) {
+        res.status(400);
+        return res.json({message: 'Missing parameters'});
+    }
+    const encryptedUsername = encrypt(username, encryption_key);
+    const encryptedPassword = encrypt(password, encryption_key);
+    const result = await modelsObj.UserPassword.create({
+        ownerUserId: userId, password: encryptedPassword, username: encryptedUsername, url, label
+    });
+    // users_passwords id, owner_user_id, url, username, password, shared_by_user_id, created_at, updated_at
+    res.status(200);
+    res.json({message: 'Password is saved'});
+});
+
+app.post('/passwords/list', async (req, res, next) => {
+    const userId = req.auth.user_id;
+    const encryptionKey = req.body.encryption_key;
+    const modelsObj = await models.default;
+    let passwords = await modelsObj.UserPassword.findAll({
+        attributes: ['id', 'url', 'username', 'password', 'label', 'weak_encryption'], where: { ownerUserId: userId }
+    });
+    const userRecord = await modelsObj.User.findOne({
+        attributes: ['encryption_key'], where: { id: userId }
+    });
+    const matched = await bcrypt.compare(encryptionKey, userRecord.encryption_key);
+    if (!matched) {
+        res.status(400);
+        return res.json({message: 'Incorrect encryption key'});
+    }
+    const passwordsArr = [];
+    for (let i = 0; i < passwords.length; i++) {
+        const element = passwords[i];
+        if (element.weak_encryption) {
+            const decryptedPassword = decrypt(element.password, userRecord.encryption_key);// decrypted with encryption key hash
+            const decryptedUserName = decrypt(element.username, userRecord.encryption_key);
+            element.password = encrypt(decryptedPassword, encryptionKey);// re-encrypted with actual encryption key
+            element.username = encrypt(decryptedUserName, encryptionKey);
+            element.weak_encryption = false;
+            await element.save();// save
+        }
+        element.password = decrypt(element.password, encryptionKey);
+        element.username = decrypt(element.username, encryptionKey);
+        passwordsArr.push(element);
+    }
+    res.status(200);
+    res.json({message: 'Success', data: passwordsArr});
 });
 
 

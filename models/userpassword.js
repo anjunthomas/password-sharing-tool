@@ -1,7 +1,6 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Sequelize, Model } = require("sequelize");
+
 module.exports = (sequelize, DataTypes) => {
   class UserPassword extends Model {
     /**
@@ -10,20 +9,18 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      UserPassword.belongsTo(models.User, {foreignKey: 'ownerUserId'})
     }
   }
   UserPassword.init({
-    owner_user_id: DataTypes.INTEGER,
+    ownerUserId: DataTypes.INTEGER, // user who owns the password
+    url: DataTypes.STRING, // eg. facebook/login
+    username: DataTypes.STRING, // encrypted in the db
+    password: DataTypes.STRING, // encrypted in the db
+    sharedByUserId: DataTypes.INTEGER, // gives the id of the person who shared the password
     label: DataTypes.STRING,
-    url: DataTypes.STRING,
-    username: DataTypes.STRING,
-    password: DataTypes.STRING,
-    shared_by_user_id: DataTypes.INTEGER,
-    weak_encryption: DataTypes.BOOLEAN,
-    source_password_id: DataTypes.INTEGER,
-    created_at: DataTypes.DATE,
-    updated_at: DataTypes.DATE
+    weak_encryption: DataTypes.BOOLEAN, // flag to indicate if a password has a weak encryption
+    source_password_id: DataTypes.INTEGER // parent password id. 
   }, {
     sequelize,
     modelName: 'UserPassword',
