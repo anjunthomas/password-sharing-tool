@@ -3,6 +3,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const models = require('./models');
 const jwt = require('jsonwebtoken');
+const { encrypt, decrypt } = require('./cryptoUtils');
 const {expressjwt } = require('express-jwt');
 const unless = require("express-unless");
 expressjwt.unless = unless;
