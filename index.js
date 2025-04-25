@@ -116,7 +116,7 @@ app.post('/login', async (req, res, next) => {
 app.post('/passwords/save', async (req, res, next) => {
     const { url, username, password, encryption_key, label } = req.body;
     const userId = req.auth.user_id;
-    const modelsObj = await models.default;
+    const modelsObj = models;
     const userRecord = await modelsObj.User.findOne({
         attributes: ['encryption_key'], where: { id: userId }
     });
@@ -146,7 +146,7 @@ app.post('/passwords/save', async (req, res, next) => {
 app.post('/passwords/list', async (req, res, next) => {
     const userId = req.auth.user_id;
     const encryptionKey = req.body.encryption_key;
-    const modelsObj = await models.default;
+    const modelsObj = models;
     let passwords = await modelsObj.UserPassword.findAll({
         attributes: ['id', 'url', 'username', 'password', 'label', 'weak_encryption'], where: { ownerUserId: userId }
     });

@@ -79,14 +79,6 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'User',
     tableName: 'Users', // mapping to my table User
     underscored: true,   // for sequelize to know to use _
-    hooks: {
-      beforeCreate: async (user) => {
-        if (user.password) {
-          const salt = await bcrypt.genSalt(10);
-          user.password = await bcrypt.hash(user.password, salt);
-        }
-      }
-    }
   });
   User.verifyToken = async function (token) {
     try {
