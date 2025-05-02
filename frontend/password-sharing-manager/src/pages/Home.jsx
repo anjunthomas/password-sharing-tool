@@ -11,7 +11,7 @@ export default function Home() {
     <div className="tabs">
         <Link to="/signup">SignUp</Link>
         <Link to="/login">Login</Link>
-        <Link to="/passwordsharing">Password Share Manager</Link>
+        <Link to="/passwordShare">Password Share Manager</Link>
     </div>
   );
 }

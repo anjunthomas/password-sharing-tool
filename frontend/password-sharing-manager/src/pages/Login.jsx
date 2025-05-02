@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import FormInput from "../components/FormInput";
+import FormInput from "../components/AddPasswordForm";
 
 export default function Login(){
 
@@ -12,9 +12,36 @@ export default function Login(){
         setFormData({...formData, [e.target.name]: e.target.value});
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault(); // stopping the page from refreshing with each change
-        console.log("Login form submitted:", formData);
+        try {
+            const response = await fetch("http://localhost:5000/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: formData.email,
+                    password: formData.password,
+                }),
+            });
+
+            const data = await response.json();
+
+            if(response.ok){
+
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("name", data.name);
+                alert(`Login successful. Hello, ${data.name}!`);
+
+                window.location.href = "/passwordShare";
+            } else {
+                alert(`Login failed: ${data.message}`);
+            }
+        } catch (error ) {
+            console.error("Login error:", error);
+            alert("An error occured during Login.");
+        }
     }
     return (
         <div className="form-wrapper">
@@ -22,17 +49,22 @@ export default function Login(){
             <form onSubmit={handleSubmit} className="form-container">
                 <label>Email</label>
                 <input
-                    email="email"
+                    name="email"
+                    type="email"
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Email"/>
 
                 <label>Password</label>
                 <input
-                    password="password"
+                    name="password"
+                    type="password"
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Password"/>
+                <button type="submit" className="submit-button">
+                    Submit
+                </button>
             </form>
         </div>
     );
