@@ -17,10 +17,34 @@ export default function Signup(){
         setFormData({...formData, [e.target.name]: e.target.value});
     };
     
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault(); // stops the page from refreshing which is default HTML behavior
-        console.log("Signup form submitted:", formData);
-        // Here you would call your backend API
+        
+        try {
+            const response = await fetch("http://localhost:5000/signup", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    name: formData.userName,
+                    email: formData.email,
+                    password: formData.password,
+                    encryption_key: formData.encryptionKey,
+                }),
+            });
+
+            const data = await response.json();
+
+            if(response.ok){
+                alert("Signup was successful!");
+            } else {
+                alert(`Singup failed: ${data.message}`);
+            }
+        } catch (error ) {
+            console.error("Signup error:", error);
+            alert("An error occured during signup.");
+        }
     };
 
     return (
@@ -54,6 +78,10 @@ export default function Signup(){
                     value={formData.encryptionKey}
                     onChange={handleChange}
                     placeholder="encryptionKey"/>
+
+                <button type="submit" className="submit-button">
+                    Submit
+                </button>
             </form>  
         </div>
     )
