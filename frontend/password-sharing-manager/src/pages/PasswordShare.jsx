@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import AddPasswordForm from "../components/AddPasswordForm";
+import SharePasswordForm from "../components/SharePasswordForm";
+import "../styles/PasswordShare.css";
 
 export default function PasswordShare(){
 
@@ -27,45 +29,50 @@ export default function PasswordShare(){
         }
     }
 
-    return (
-        <div style={{ padding: "20px", maxWidth: "600px", margin: "auto" }}>
-            <h2>Hello {userName}</h2>
-            <button onClick={() => { localStorage.removeItem("token"); window.location.href = "/login"; }}>
-                Logout
-            </button>
+        return (
+            <div style={{ padding: "20px", maxWidth: "600px", margin: "auto" }}>
+                <h2>Hello {userName}</h2>
+                <button onClick={() => { localStorage.removeItem("token"); window.location.href = "/login"; }}>
+                    Logout
+                </button>
 
-            <AddPasswordForm onSuccess={fetchPasswords} />
-      
-            <div style={{ marginTop: "20px" }}>
-                <label>Encryption Key</label>
-                <input
-                    type="password"
-                    value={encryptionKey}
-                    onChange={(e) => setEncryptionKey(e.target.value)}
-                />
-            <button onClick={fetchPasswords}>Show Saved Passwords</button>
-          </div>
-      
-          <table border="1" style={{ marginTop: "20px", width: "100%" }}>
-            <thead>
-              <tr>
-                <th>Label</th>
-                <th>URL</th>
-                <th>Username</th>
-                <th>Masked Password</th>
-              </tr>
-            </thead>
-            <tbody>
-              {passwords.map((entry) => (
-                <tr key={entry.id}>
-                  <td>{entry.label}</td>
-                  <td>{entry.url}</td>
-                  <td>{entry.username}</td>
-                  <td>*****</td>
+                <AddPasswordForm onSuccess={fetchPasswords} />
+
+                <SharePasswordForm passwords={passwords} onSuccess={fetchPasswords} />
+
+        
+                <div style={{ marginTop: "20px" }}>
+                    <label>Encryption Key</label>
+                    <input
+                        type="password"
+                        value={encryptionKey}
+                        onChange={(e) => setEncryptionKey(e.target.value)}
+                    />
+                <button onClick={fetchPasswords}>Show Saved Passwords</button>
+            </div>
+        
+            <table border="1" style={{ marginTop: "20px", width: "100%" }}>
+                <thead>
+                <tr>
+                    <th>Label</th>
+                    <th>URL</th>
+                    <th>Username</th>
+                    <th>Masked Password</th>
+                    <th>Shared By</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-    );
-}
+                </thead>
+                <tbody>
+                {passwords.map((entry) => (
+                    <tr key={entry.id}>
+                    <td>{entry.label}</td>
+                    <td>{entry.url}</td>
+                    <td>{entry.username}</td>
+                    <td>*****</td>
+                    <td>{entry.SharedBy ? entry.SharedBy.name : "—"}</td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+            </div>
+        );
+    }

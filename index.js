@@ -163,7 +163,15 @@ app.post('/passwords/list', async (req, res, next) => {
     const encryptionKey = req.body.encryption_key;
     const modelsObj = models;
     let passwords = await modelsObj.UserPassword.findAll({
-        attributes: ['id', 'url', 'username', 'password', 'label', 'weak_encryption'], where: { ownerUserId: userId }
+        attributes: ['id', 'url', 'username', 'password', 'label', 'weak_encryption', 'sharedByUserId'],
+        where: { ownerUserId: userId },
+        include: [
+            {
+              model: modelsObj.User,
+              as: 'SharedBy',
+              attributes: ['name'],
+            }
+        ]
     });
     const userRecord = await modelsObj.User.findOne({
         attributes: ['encryption_key'], where: { id: userId }
@@ -184,9 +192,10 @@ app.post('/passwords/list', async (req, res, next) => {
             element.weak_encryption = false;
             await element.save();// save
         }
-        element.password = decrypt(element.password, encryptionKey);
-        element.username = decrypt(element.username, encryptionKey);
-        passwordsArr.push(element);
+        const plain = element.toJSON(); 
+        plain.password = decrypt(element.password, encryptionKey);
+        plain.username = decrypt(element.username, encryptionKey);
+        passwordsArr.push(plain);
     }
     res.status(200);
     res.json({message: 'Success', data: passwordsArr});

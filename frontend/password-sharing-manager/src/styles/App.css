@@ -37,3 +37,7 @@ input {
 .submit-button:hover {
   background-color: #254eda;
 }
+
+.button {
+  color: blue;
+}

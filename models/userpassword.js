@@ -9,7 +9,8 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      UserPassword.belongsTo(models.User, {foreignKey: 'ownerUserId'})
+      UserPassword.belongsTo(models.User, {foreignKey: 'ownerUserId'});
+      UserPassword.belongsTo(models.User, { foreignKey: 'sharedByUserId', as: 'SharedBy' });
     }
   }
   UserPassword.init({
