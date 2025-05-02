@@ -39,7 +39,7 @@ export default function Signup(){
             if(response.ok){
                 alert("Signup was successful!");
             } else {
-                alert(`Singup failed: ${data.message}`);
+                alert(`Signup failed: ${data.message}`);
             }
         } catch (error ) {
             console.error("Signup error:", error);
