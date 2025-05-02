@@ -1,7 +1,9 @@
 const dotenv = require('dotenv');
 const express = require('express');
+const cors = require('cors');
 const bcrypt = require('bcrypt');
 const models = require('./models');
+
 const jwt = require('jsonwebtoken');
 const { encrypt, decrypt } = require('./cryptoUtils');
 const {expressjwt } = require('express-jwt');
@@ -12,7 +14,19 @@ dotenv.config(); // loading environment variables from .env file
 //console.log('JWT_SECRET:', process.env.JWT_SECRET);
 const app = express();
 
+app.use(cors());
 app.use(express.json()); // this is a middleware to parse incoming JSON requests
+
+models.sequelize.sync()
+  .then(() => {
+    console.log('Database synced');
+    app.listen(5000, () => {
+      console.log('Server listening on port 5000');
+    });
+  })
+  .catch((err) => {
+    console.error('Error syncing database:', err);
+});
 
 app.get('/', (req, res) => {
     res.send('Hello World!!');
@@ -177,6 +191,82 @@ app.post('/passwords/list', async (req, res, next) => {
     res.status(200);
     res.json({message: 'Success', data: passwordsArr});
 });
+
+app.post('/passwords/share-password', async function(req, res) {
+    try {
+        const { password_id, encryption_key, email } = req.body;
+        const userId = req.auth.user_id;
+        const dbModels = require('./models'); // or use your cached `dbModels` if already loaded
+
+        const passwordRow = await dbModels.UserPassword.findOne({
+            attributes: ['label', 'url', 'username', 'password'],
+            where: { id: password_id, ownerUserId: userId }
+        });
+
+        if (!passwordRow) {
+            return res.status(400).json({ message: 'Incorrect password_id' });
+        }
+
+        const userRecord = await dbModels.User.findOne({
+            attributes: ['encryption_key'],
+            where: { id: userId }
+        });
+
+        const matched = await bcrypt.compare(encryption_key, userRecord.encryption_key);
+        if (!matched) {
+            return res.status(400).json({ message: 'Incorrect encryption key' });
+        }
+
+        const shareUserObj = await dbModels.User.findOne({
+            attributes: ['id', 'encryption_key'],
+            where: { email }
+        });
+
+        if (!shareUserObj) {
+            return res.status(400).json({ message: 'User with that email does not exist' });
+        }
+
+        const alreadyShared = await dbModels.UserPassword.findOne({
+            attributes: ['id'],
+            where: {
+                source_password_id: password_id,
+                ownerUserId: shareUserObj.id
+            }
+        });
+
+        if (alreadyShared) {
+            return res.status(400).json({ message: 'This password is already shared with the user' });
+        }
+
+        // Decrypt original password
+        const decryptedUsername = decrypt(passwordRow.username, encryption_key);
+        const decryptedPassword = decrypt(passwordRow.password, encryption_key);
+
+        // Encrypt with recipient's encryption key
+        const encryptedSharedUsername = encrypt(decryptedUsername, shareUserObj.encryption_key);
+        const encryptedSharedPassword = encrypt(decryptedPassword, shareUserObj.encryption_key);
+
+        const newPassword = {
+            ownerUserId: shareUserObj.id,
+            label: passwordRow.label,
+            url: passwordRow.url,
+            username: encryptedSharedUsername,
+            password: encryptedSharedPassword,
+            sharedByUserId: userId,
+            weak_encryption: true,
+            source_password_id: password_id
+        };
+
+        await dbModels.UserPassword.create(newPassword);
+
+        return res.status(200).json({ message: 'Password shared successfully' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'An error occurred while sharing the password.' });
+    }
+});
+
 
 
 const PORT = process.env.PORT || 3000;

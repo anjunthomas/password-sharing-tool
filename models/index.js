@@ -9,7 +9,7 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.cjs')[env];
 const db = {};
 
-const sequelize = new Sequelize(`${config.url}?sslmode=no-verify`, config)
+const sequelize = new Sequelize(config.url, config)
 
 fs
   .readdirSync(__dirname)
