@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import FormInput from "../components/AddPasswordForm";
+import { Link } from 'react-router-dom';
 
 export default function Login(){
 
@@ -66,6 +67,8 @@ export default function Login(){
                     Submit
                 </button>
             </form>
+
+            <p>Don't have an account? <Link to="/signup">Sign up here</Link></p>
         </div>
     );
 }
